@@ -21,12 +21,11 @@ const READS = 30;
 /**
  * Runs body while this process's event loop is blocked in 20 ms slices, so a
  * frame passes between any two protocol calls, as on a loaded CI runner.
+ * Atomics.wait blocks without spinning a core the other workers need.
  */
 const starved = async (body) => {
-  const timer = setInterval(() => {
-    const end = Date.now() + 20;
-    while (Date.now() < end);
-  }, 0);
+  const blocker = new Int32Array(new SharedArrayBuffer(4));
+  const timer = setInterval(() => Atomics.wait(blocker, 0, 0, 20), 0);
   try {
     return await body();
   } finally {
