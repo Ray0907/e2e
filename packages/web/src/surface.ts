@@ -13,6 +13,7 @@ import type { Browser, BrowserContext, ElementHandle, FrameLocator, Page, Route 
 import {
   EngineError,
   raceAbort,
+  TestError,
   withinCleanupBudget,
   type EngineAppInfo,
   type EngineAttemptContext,
@@ -648,7 +649,10 @@ export class PlaywrightSurface {
         const reads = taken.filter((raw) => raw !== null);
         if (reads.length !== taken.length) {
           releaseHandles();
-          throw new EngineError('ENGINE_FAILURE', 'a match was returned without its read', { retryable: false });
+          throw new TestError(
+            'INVALID_LOCATOR',
+            'a selector that captures with * (*css=article >> text=Hello) is not supported: use filter({ has }) instead',
+          );
         }
         const candidates = reads.flatMap((raw, index) => (projected.visible && raw.states.hidden ? [] : [{ raw, index }]));
         // An exact label query matches any of the control's labels as the engine's reader names

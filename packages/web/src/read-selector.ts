@@ -68,17 +68,18 @@ export const READ_SELECTOR_ENGINE_SOURCE = `() => {
 
 /**
  * Takes back, in order, the reads the engine recorded under `token` and
- * deletes them; `null` where none was recorded. `locator.evaluateAll` calls it
- * with the matched elements. A caller pinning handles evaluates it on the
- * first handle with every handle in `elements`, so it runs in the frame the
- * handles belong to; `page.evaluate` would reject handles taken inside an
- * iframe.
+ * deletes them; `null` where none was recorded, which is a match the engine
+ * never saw: a `*` capture earlier in the selector returns an element the
+ * chain only passed through. `locator.evaluateAll` calls it with the matched
+ * elements. A caller pinning handles evaluates it on the first handle with
+ * every handle in `elements`, so it runs in the frame the handles belong to;
+ * `page.evaluate` would reject handles taken inside an iframe.
  */
 export const takeReadsFunction = (
   subject: Element | Element[],
   arg: { readonly token: string; readonly elements?: Element[] },
 ): (RawNodeData | null)[] =>
-  (arg.elements ?? (subject as Element[])).map((element) => {
+  (Array.isArray(subject) ? subject : (arg.elements ?? [])).map((element) => {
     const reads = (element as Element & Record<symbol, Map<string, RawNodeData> | undefined>)[Symbol.for('e2e.locate.reads')];
     const read = reads?.get(arg.token) ?? null;
     reads?.delete(arg.token);
